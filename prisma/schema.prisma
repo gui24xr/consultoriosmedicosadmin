@@ -1,0 +1,269 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+model Person{
+  id String @id @default(uuid())
+  dni String @unique
+  firstName String
+  lastName String
+  gender Gender @default(OTHER)
+  email String?
+  phone String?
+  whatsAppNumber String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+  addressData AddressData?
+  patient Patient?
+  medic Medic?
+  user User?
+}
+
+model AddressData {
+  id String @id @default(uuid())
+  dni String @unique
+  street String?
+  number String?
+  city String?
+  postalCode String?
+  state String?
+  country String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+  person Person @relation(fields: [dni], references: [dni], onDelete: Cascade)
+}
+
+model User{
+  id String @id @default(uuid())
+  dni String @unique
+  username String @unique
+  password String
+  role String @default("USER") // USER, ADMIN, MEDIC, PATIENT
+  isActive Boolean @default(false)
+  activationCode String?
+  recoveryCode String?
+  recoveryCodeExpires DateTime?
+  lastLogin DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  person Person @relation(fields: [dni], references: [dni], onDelete: Cascade)
+}
+
+
+model Patient {
+  id String @id @default(uuid())
+  code String @unique // Código legible como PAT-001, PAT-002, etc.
+  dni String @unique
+  record String? @unique
+  birthDate DateTime?
+  emergencyContactPhone String?
+  emergencyContactName String?
+  emergencyContactRelationship String?
+  hasClinicHistory Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+  bookings Booking[]
+  clinicHistory ClinicHistory?
+  person Person @relation(fields: [dni], references: [dni], onDelete: Cascade)
+  consultations Consultation[]
+}
+
+model Specialty{
+  id String @id @default(uuid())
+  code String @unique // Código legible como SPEC-001, SPEC-002, etc.
+  name String @unique
+  medics Medic[]
+  consultationServices ConsultationService[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt 
+  deletedAt DateTime?
+}
+
+model Medic {
+  id String @id @default(uuid())
+  code String @unique // Código legible como MED-001, MED-002, etc.
+  inService Boolean @default(true)
+  dni String @unique
+  record String? @unique
+  specialties Specialty[] 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+  person Person @relation(fields: [dni], references: [dni], onDelete: Cascade)
+  consultationService ConsultationService[]
+  consultations Consultation[]
+  clinicHistoryPosts ClinicHistoryPost[]
+}
+
+model ClinicHistory {
+  id String @id @default(uuid())
+  dni String @unique
+  number String? @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+  patientMedicalData PatientMedicalData?
+  clinicHistoryPosts ClinicHistoryPost[]
+  patient Patient @relation(fields: [dni], references: [dni], onDelete: Cascade)
+}
+
+enum BiologicalSex {
+  MASCULINE
+  FEMININE
+  NULL_OR_UNSPECIFIED
+}
+
+
+
+model PatientMedicalData {
+  id String @id @default(uuid())
+  clinicHistoryId String @unique
+  bloodType String?
+  biologicalSex BiologicalSex? @default(NULL_OR_UNSPECIFIED)
+  genderIdentity String? @default("")
+  allergies String?
+  medicalHistory String?
+  currentMedication String?
+  familyMedicalHistory String?
+  personalMedicalHistory String?
+  surgicalHistory String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+  clinicHistory ClinicHistory @relation(fields: [clinicHistoryId], references: [id], onDelete: Cascade)
+}
+
+model ClinicHistoryPost{
+  id String @id @default(uuid())
+  medicId String
+  clinicHistoryId String
+  consultationId String? @unique
+  date DateTime
+  diagnosis String
+  treatment String
+  followUp String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+  medic Medic @relation(fields: [medicId], references: [id], onDelete: Cascade)
+  clinicHistory ClinicHistory @relation(fields: [clinicHistoryId], references: [id], onDelete: Cascade)
+  consultation Consultation?
+}
+
+model ConsultationService {
+  id String @id @default(uuid())
+  inService Boolean @default(true)
+  name String?
+  description String?
+  medicId String?
+  specialtyId String
+  medic Medic? @relation(fields: [medicId], references: [id], onDelete: SetNull)
+  specialty Specialty @relation(fields: [specialtyId], references: [id], onDelete: Cascade)
+  appointments Appointment[]
+  consultations Consultation[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+}
+
+enum AppointmentType {
+  REGULAR
+  ADDITIONAL
+  URGENT
+}
+
+enum AppointmentPriority {
+  LOW
+  MEDIUM
+  HIGH
+  VERY_HIGH
+}
+
+enum AppointmentStatus {
+  AVAILABLE
+  RESERVED
+  NOT_AVAILABLE
+  SUSPENDED
+  FINISHED
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  ABSENT
+  SUSPENDED
+}
+
+enum ConsultationStatus {
+  IN_PROGRESS
+  IN_CONSULTATION
+  CANCELLED
+  COMPLETED
+}
+
+model Appointment {
+  id String @id @default(uuid())
+  type AppointmentType @default(REGULAR)
+  startDateTime DateTime @default(now())
+  endDateTime DateTime
+  consultationServiceId String
+  consultationId String? @unique
+  status AppointmentStatus @default(AVAILABLE)
+  bookings Booking[]
+  consultationService ConsultationService @relation(fields: [consultationServiceId], references: [id], onDelete: Cascade)
+  consultation Consultation?
+}
+
+model Booking {
+  id String @id @default(uuid())
+  isCurrent Boolean @default(false)
+  patientId String
+  appointmentId String
+  status BookingStatus @default(PENDING)
+  statusLastModified DateTime? @default(now()) 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  appointment Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)  
+}
+
+model Consultation {
+  id String @id @default(uuid())
+  code String @default("")
+  patientId String
+  medicId String
+  consultationServiceId String
+  appointmentId String? @unique
+  clinicHistoryPostId String? @unique
+  status ConsultationStatus @default(IN_PROGRESS)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+  appointment Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)  
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  medic Medic @relation(fields: [medicId], references: [id], onDelete: Cascade)
+  consultationService ConsultationService @relation(fields: [consultationServiceId], references: [id], onDelete: Cascade)
+  clinicHistoryPost ClinicHistoryPost? @relation(fields: [clinicHistoryPostId], references: [id], onDelete: SetNull)
+
+}
