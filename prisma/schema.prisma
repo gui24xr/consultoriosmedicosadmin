@@ -99,7 +99,6 @@ model Specialty{
 
 model Medic {
   id String @id @default(uuid())
-  code String @unique // Código legible como MED-001, MED-002, etc.
   inService Boolean @default(true)
   dni String @unique
   record String? @unique
