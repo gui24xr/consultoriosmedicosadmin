@@ -2,8 +2,8 @@ import { z } from 'zod'
 
 export const specialtyDTOSchema = z.object({
   id: z.string().uuid('ID debe ser un UUID válido'),
-  name: z.string().min(1, 'El nombre de la especialidad es requerido'),
-  code: z.string().min(1, 'El código de la especialidad es requerido'),
+  name: z.string().min(5, 'El nombre de la especialidad es requerido, debe tener al menos 5 caracteres'),
+  code: z.string().min(5, 'El código de la especialidad es requerido, debe tener al menos 5 caracteres'),
   updatedAt: z.date(),
   prestations: z.array(z.object({
     id: z.string().uuid('ID del servicio debe ser un UUID válido'),
@@ -19,7 +19,7 @@ export const specialtyDTOSchema = z.object({
 
 
 export const specialtyCreateDTOSchema = z.object({
-  name: z.string().min(1, 'El nombre de la especialidad es requerido'),
+  name: z.string().min(5, 'El nombre de la especialidad es requerido y/o debe tener al menos 5 caracteres'),
 })
 
 export const specialtyUpdateSchema = specialtyCreateDTOSchema.partial()

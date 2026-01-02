@@ -1,10 +1,6 @@
-
+import { z } from "zod"
 
 const log = (message: string) => console.log('//----EEROR HANDLER -------\n', message)
-
-/**
- * Convierte errores de Prisma en mensajes user-friendly
- */
 export function errorHandler(error: unknown): string {
   let errorMessage: string | null = null
 
@@ -44,17 +40,17 @@ export function errorHandler(error: unknown): string {
     }
   }
 
+  if (error instanceof z.ZodError) {
+  errorMessage = error.issues.map(issue => issue.message).join(', ')
+}
   // Si tenemos un mensaje, lo devolvemos
   if (errorMessage) {
     log(errorMessage)
     return errorMessage
   }
 
-  // Si no es un error de Prisma conocido, lo lanzamos para que lo capture el Error Boundary
-  if (errorMessage) {
-    log(errorMessage)
-    return errorMessage
-  }
+
+
 
   log('//---- ERROR DESCONOCIDOOOOOOOOOOOOO -------\n')
   throw error
