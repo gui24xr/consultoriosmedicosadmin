@@ -1,9 +1,9 @@
 import specialtiesRepository from "./specialties.repository";
-import medicsRepository from "./medics.repository";
-import consultationServicesRepository from "./consultationServices.repository";
+import providersRepository from "./providers.repository";
+import prestationsRepository from "./prestations.repository";
 
 export {
     specialtiesRepository,
-    medicsRepository,
-    consultationServicesRepository
+    providersRepository,
+    prestationsRepository
 }

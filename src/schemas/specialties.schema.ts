@@ -5,35 +5,27 @@ export const specialtyDTOSchema = z.object({
   name: z.string().min(1, 'El nombre de la especialidad es requerido'),
   code: z.string().min(1, 'El código de la especialidad es requerido'),
   updatedAt: z.date(),
-  consultationServices: z.array(z.object({
+  prestations: z.array(z.object({
     id: z.string().uuid('ID del servicio debe ser un UUID válido'),
-    name: z.string().nullable()
+    code: z.string().nullable(),
+    label: z.string()
   })).default([]),
-  medics: z.array(z.object({
+  providers: z.array(z.object({
     id: z.string().uuid('ID del médico debe ser un UUID válido'),
     completeName: z.string().min(1, 'El nombre completo del médico es requerido')
   })).default([])
 })
 
-export const specialtyCreateInternalDTOSchema = z.object({
-  name: z.string().min(1, 'El nombre de la especialidad es requerido'),
-  code: z.string().min(1, 'El código de la especialidad es requerido'),
-})
 
-export const specialtyCreteInputDTOSchema = z.object({
+
+export const specialtyCreateDTOSchema = z.object({
   name: z.string().min(1, 'El nombre de la especialidad es requerido'),
 })
 
-export const SpecialtyUpdateSchema = z.object({
-    code: z.string().optional(),
-    name: z.string().optional()
-}).refine(data => data.code || data.name, {
-    message: "Debes proporcionar al menos un campo para actualizar"
-})
+export const specialtyUpdateSchema = specialtyCreateDTOSchema.partial()
 
 
 
 export type SpecialtyDTO = z.infer<typeof specialtyDTOSchema>
-export type SpecialtyCreateInternalDTO = z.infer<typeof specialtyCreateInternalDTOSchema>
-export type SpecialtyCreateDTO = z.infer<typeof specialtyCreteInputDTOSchema>
-export type SpecialtyUpdateDTO = z.infer<typeof SpecialtyUpdateSchema>
+export type SpecialtyCreateDTO = z.infer<typeof specialtyCreateDTOSchema>
+export type SpecialtyUpdateDTO = z.infer<typeof specialtyUpdateSchema>

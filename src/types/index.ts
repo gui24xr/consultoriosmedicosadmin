@@ -1,20 +1,27 @@
 export type {
     SpecialtyDTO,
-    SpecialtyCreateInternalDTO,
     SpecialtyUpdateDTO,
     SpecialtyCreateDTO
   
 } from "@/schemas/specialties.schema";
 
 export type {
-  ConsultationServiceDTO,
-  ConsultationServiceInputDTO
-} from "@/schemas/consultationServices.schema";
+  PrestationDTO,
+  PrestationCreateInternalDTO,
+  PrestationCreateDTO,
+  PrestationUpdateDTO,
+} from "@/schemas/prestations.schema";
 
 export type {
-  MedicDTO,
-  MedicDetailDTO,
-  MedicInputDTO,
-  MedicCreateDTO,
-  MedicUpdateDTO
-} from "@/schemas/medics.schema";
+  ProviderDTO,
+  ProviderDetailDTO,
+  ProviderCreateInternalDTO,
+  ProviderCreateDTO,
+  ProviderUpdateDTO,
+  
+} from "@/schemas/providers.schema";
+
+
+export type {
+  ActionResponse
+} from "@/types/serveractions";

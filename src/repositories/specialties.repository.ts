@@ -1,101 +1,109 @@
 import prisma from "@/lib/prisma"
-import { SpecialtyCreateInternalDTO, SpecialtyUpdateDTO} from "@/types"
+import { SpecialtyUpdateDTO, SpecialtyCreateDTO } from "@/types"
 
 
-
-const includeSpecialties = {
-    medics: {
+const specialtyRelationsQuery = {
+    providers: true,
+    prestations: {
         include: {
-            person: true
+            provider: true
         }
     },
-    consultationServices: true,
-
 } as const
 
 
 const specialtiesRepository = {
-    createSpecialty: async (data: SpecialtyCreateInternalDTO) => {
-        try {
-            console.log('data createSpecialty en query', data)
-            const specialty = await prisma.specialty.create({
-                data: {
-                    code: data.code,
-                    name: data.name
-                },
-                include: includeSpecialties,
-            })
-            return specialty
-        } catch (error) {
-            console.error(error)
-            throw error
-        }
-    },
+   async createSpecialty(data: SpecialtyCreateDTO) {
+  return await prisma.$transaction(async (tx) => {
+    // 1. Intentar buscar si existe (para el caso de restauración)
+    const existing = await tx.specialty.findFirst({
+      where: { name: data.name },
+    });
+
+    // CASO 1: Restauración (Soft Delete)
+    if (existing && existing.deletedAt !== null) {
+      return await tx.specialty.update({
+        where: { id: existing.id },
+        data: { ...data, deletedAt: null },
+        include: specialtyRelationsQuery
+      });
+    }
+
+    // CASO 2: La especialidad no existe (o eso creemos)
+    // Primero "reservamos" el número del contador
+    const counter = await tx.entityCounter.upsert({
+      where: { entity: 'specialty' },
+      update: { current: { increment: 1 } },
+      create: { entity: 'specialty', prefix: 'SPEC', current: 1 }
+    });
+
+    const code = `${counter.prefix}-${counter.current.toString().padStart(4, '0')}`;
+
+    return await tx.specialty.create({
+      data: {
+        ...data,
+        code
+      },
+      include: specialtyRelationsQuery
+    });
+  });
+},
 
     getSpecialties: async () => {
-        try {
-            const specialties = await prisma.specialty.findMany({
-                include: includeSpecialties,
+        return await prisma.specialty.findMany({
+                where: { deletedAt: null },
+                include: specialtyRelationsQuery,
                 orderBy: { createdAt: 'desc' }
             })
-            return specialties
-        } catch (error) {
-            console.error(error)
-            throw error
-        }
     },
 
     getSpecialty: async (id: string) => {
-
-        try {
-            const specialty = await prisma.specialty.findUnique({
-                where: { id },
-                
-                include: includeSpecialties,
-               
+        return await prisma.specialty.findFirstOrThrow({
+                where: { id, deletedAt: null },           
+                include: specialtyRelationsQuery,          
             })
             
-            return specialty
-        } catch (error) {
-            console.error(error)
-            throw error
-        }
     },
 
 
     updateSpecialty: async (id: string, data: SpecialtyUpdateDTO) => {
-        try {
-            const specialty = await prisma.specialty.update({
+      return await prisma.specialty.update({
                 where: { id },
-                data: { name: data.name, code: data.code },
-                include: includeSpecialties
+                data: data,
+                include: specialtyRelationsQuery
             })
-            return specialty
-        } catch (error) {
-            console.error(error)
-            throw error
-        }
     },
 
     deleteSpecialty: async (id: string) => {
-        try {
-            const specialty = await prisma.specialty.delete({
+      return await prisma.specialty.update({
                 where: { id },
-                include: includeSpecialties
+                data: { deletedAt: new Date() },
+                include: specialtyRelationsQuery
             })
-            return specialty
-        } catch (error) {
-            console.error(error)
-            throw error
-        }
+    },
+
+
+    hardDeleteSpecialty: async (id: string) => {
+        return await prisma.specialty.delete({
+                where: { id },
+                include: specialtyRelationsQuery
+            })
+           
+    },
+
+    restoreSpecialty: async (id: string) => {
+      return await prisma.specialty.update({
+                where: { id },
+                data: { deletedAt: null },
+                include: specialtyRelationsQuery
+            })
     },
 
 }
 
 
-// Inferir el tipo del retorno de una función del repository
 type SpecialtyRepositoryReturn = Awaited<ReturnType<typeof specialtiesRepository.getSpecialty>>
 
-export type SpecialtyWithRelations = NonNullable<SpecialtyRepositoryReturn>
+export type SpecialtyType = NonNullable<SpecialtyRepositoryReturn>
 
 export default specialtiesRepository
