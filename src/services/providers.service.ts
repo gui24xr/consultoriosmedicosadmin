@@ -1,4 +1,4 @@
-import { ProviderDTO,  ProviderDetailDTO, ProviderCreateInternalDTO, ProviderCreateDTO, ProviderUpdateDTO }from "@/types";
+import { ProviderDTO,  ProviderDetailDTO, ProviderCreateDTO, ProviderUpdateBasicDataDTO, }from "@/types";
 import { ProviderType, ProviderDetailType } from "@/repositories/providers.repository";
 import { providersRepository } from "@/repositories";
 import { unstable_cache } from "next/cache";
@@ -53,9 +53,7 @@ function getProviderDTO(provider: ProviderType): ProviderDTO{
 }
 }
 class ProvidersService {
-    private getNewProviderCode(): string {
-        return 'PROV' + Date.now().toString()
-    }
+
 
     private getNewProviderRecord(): string {
         return 'LEG' + Date.now().toString()
@@ -63,37 +61,22 @@ class ProvidersService {
     
 
     async createProvider(data: ProviderCreateDTO): Promise<ProviderDetailDTO> {
-        try {
-            const newProviderCreateData: ProviderCreateInternalDTO = {
-                ...data,
-                code: this.getNewProviderCode(),
-            }
-            const newProvider = await providersRepository.createProvider(newProviderCreateData)
+            const newProvider = await providersRepository.createProvider(data)
             return getProviderDetailsDTO(newProvider)
-        } catch (error) {
-            console.error(error)
-            throw error
-        }
     }
 
     async getProviders():Promise<ProviderDTO[]> {
-        try {
             const getProvidersFromDB = async () => {
                 const providers = await providersRepository.getProviders()
                 return providers.map(provider => getProviderDTO(provider))
             }
             const cachedProviders = unstable_cache(getProvidersFromDB, ['all-providers'], {tags: ['providers'], revalidate: 3600})
-            const providers = await cachedProviders()
-            return providers
-        }catch (error) {
-            console.error(error)
-            throw error
-        }
-        
+            
+            return await cachedProviders()
     }
 
     async getProvider(id: string) : Promise<ProviderDetailDTO>{
-        try {
+       
             const getProviderFromDB = async () : Promise<ProviderDetailDTO> => {
                 const provider = await providersRepository.getProviderDetails(id)
                 return getProviderDetailsDTO(provider)
@@ -105,65 +88,35 @@ class ProvidersService {
                 { tags: ['providers'], revalidate: 3600 }
             )
             
-            const provider = await cachedProvider()
-            return provider
-            
-        } catch (error) {
-            console.error(error)
-            throw error
-        }
+            return await cachedProvider()
     }
 
 
-    async updateProvider(id: string, data: ProviderUpdateDTO): Promise<ProviderDetailDTO> {
-        try {
+    async updateProvider(id: string, data: ProviderUpdateBasicDataDTO): Promise<ProviderDetailDTO> {
             const updatedProvider = await providersRepository.updateProvider(id, data)
             return getProviderDetailsDTO(updatedProvider)
-        } catch (error) {
-            console.error(error)
-            throw error
-        }
+       
     }
 
     async changeProviderInServiceStatus(id:string,inService: boolean): Promise<ProviderDTO> {
-        try {
-            const updatedProvider = await providersRepository.updateProviderInServiceStatus(id, inService)
-            return getProviderDTO(updatedProvider)
-        } catch (error) {
-            console.error(error)
-            throw error
-        }
+        const newData = {inService}
+        const updatedProvider = await providersRepository.updateProvider(id, newData)
+        return getProviderDetailsDTO(updatedProvider)
     }
 
     async deleteProvider(id: string): Promise<ProviderDTO> {
-        try {
             const deletedProvider = await providersRepository.deleteProvider(id)
             return getProviderDTO(deletedProvider)
-        } 
-            catch (error) {
-            console.error(error)
-            throw error
-        }
     }
 
     async hardDeleteProvider(id: string): Promise<ProviderDTO> {
-        try {
-            const deletedProvider = await providersRepository.hardDeleteProvider(id)
-            return getProviderDTO(deletedProvider)
-        } catch (error) {
-            console.error(error)
-            throw error
-        }
+        const deletedProvider = await providersRepository.hardDeleteProvider(id)
+        return getProviderDTO(deletedProvider)
     }
 
     async restoreProvider(id: string): Promise<ProviderDTO> {
-        try {
             const restoredProvider = await providersRepository.restoreProvider(id)
             return getProviderDTO(restoredProvider)
-        } catch (error) {
-            console.error(error)
-            throw error
-        }
     }
 
 }

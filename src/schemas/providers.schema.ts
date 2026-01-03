@@ -52,36 +52,43 @@ export const providerDetailSchemaDTO = z.object({
 })
 
 
-
-
-export const providerCreateInternalSchema = z.object({
-  code: z.string().min(6, "El código es obligatorio y no puede estar vacío."),
-  record: z.string().nullable().optional(), 
+export const providerDBSchema = z.object({
+  record: z.string().nullable(),
   dni: z.string().min(5, "El DNI es obligatorio y no puede estar vacío."),
   firstName: z.string().min(1, "El nombre es obligatorio."), 
   lastName: z.string().min(1, "El apellido es obligatorio."),
-  email: z.string().email("Formato de email inválido.").optional(), 
-  phone: z.string().optional(), 
-  whatsAppNumber: z.string().optional(),
+  email: z.string().email("Formato de email inválido."),
+  phone: z.string(),
+  whatsAppNumber: z.string(),
   specialtyIds: z.array(z.string()).min(1, "Debe seleccionar al menos una especialidad."), 
+  inService: z.boolean(),
 });
 
-export const providerCreateSchema = z.object({
-  record: z.string().nullable().optional(), 
-  dni: z.string().min(5, "El DNI es obligatorio y no puede estar vacío."),
-  firstName: z.string().min(1, "El nombre es obligatorio."), 
-  lastName: z.string().min(1, "El apellido es obligatorio."),
-  email: z.string().email("Formato de email inválido.").optional(), 
-  phone: z.string().optional(), 
-  whatsAppNumber: z.string().optional(),
-  specialtyIds: z.array(z.string()).min(1, "Debe seleccionar al menos una especialidad."), 
+export const providerUpdateEntity = providerDBSchema.partial();
+
+export const providerCreateSchema = providerDBSchema
+  .omit({ inService: true })  
+  .extend({
+    phone: z.string().optional(),          
+    whatsAppNumber: z.string().optional() 
+  });
+
+ export const providerUpdateBasicDataSchema = providerDBSchema
+  .omit({ inService: true })  // Quitar inService
+  .partial();                 // Hacer todos los campos opcionales
+
+export const providerUpdateStatusSchema = providerDBSchema.pick({
+  inService: true,
 });
 
-export const providerUpdateSchema = providerCreateSchema.partial()
+
+
+
 
 
 export type ProviderDTO = z.infer<typeof providerSchemaDTO>
 export type ProviderDetailDTO = z.infer<typeof providerDetailSchemaDTO>
-export type ProviderCreateInternalDTO = z.infer<typeof providerCreateInternalSchema>;
 export type ProviderCreateDTO = z.infer<typeof providerCreateSchema>;
-export type ProviderUpdateDTO = z.infer<typeof providerUpdateSchema>;
+export type ProviderUpdateEntityDTO = z.infer<typeof providerUpdateEntity>;
+export type ProviderUpdateBasicDataDTO = z.infer<typeof providerUpdateBasicDataSchema>;
+export type ProviderUpdateStatusDTO = z.infer<typeof providerUpdateStatusSchema>;

@@ -142,7 +142,7 @@ model Prestation {
   id String @id @default(uuid())
   inService Boolean @default(true)
   code String @unique
-  label String
+  label String @unique
   description String?
   providerId String
   specialtyId String

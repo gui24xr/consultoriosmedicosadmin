@@ -1,8 +1,8 @@
 'use server'
 import { prestationsService } from "@/services"
-import { revalidateTag, updateTag } from "next/cache"
-import { ActionResponse, PrestationDTO, PrestationCreateDTO, PrestationUpdateDTO } from "@/types"
-import { prestationCreateSchema, prestationUpdateSchema } from "@/schemas/prestations.schema"
+import {  updateTag } from "next/cache"
+import { ActionResponse, PrestationDTO, PrestationCreateDTO, PrestationUpdateBasicDataDTO, PrestationUpdateStatusDTO } from "@/types"
+import { prestationCreateSchema, prestationUpdateBasicDataSchema, prestationUpdateStatusSchema } from "@/schemas/prestations.schema"
 import { errorHandler } from "@/lib/errorHandler"
 
 async function createPrestation(prevState: ActionResponse<PrestationDTO> | null, payload: PrestationCreateDTO) : Promise<ActionResponse<PrestationDTO>>{
@@ -44,10 +44,10 @@ async function fetchPrestations(): Promise<ActionResponse<PrestationDTO[]>>  {
   }
 }
 
-async function updatePrestations(prevState: ActionResponse<PrestationDTO> | null, payload:{id:string} & PrestationDTO) : Promise<ActionResponse<PrestationDTO>>{
+async function updatePrestations(prevState: ActionResponse<PrestationDTO> | null, payload:{id:string} & PrestationUpdateBasicDataDTO) : Promise<ActionResponse<PrestationDTO>>{
   try {
       const {id:prestationId, ...data} = payload
-      prestationUpdateSchema.parse(payload)
+      prestationUpdateBasicDataSchema.parse(payload)
       const updatedPrestation = await prestationsService.updatePrestation(prestationId, data)
       updateTag('prestations')
     return {
@@ -58,6 +58,28 @@ async function updatePrestations(prevState: ActionResponse<PrestationDTO> | null
 
   } catch (error) {
         const errorMessage = errorHandler(error)
+      return {
+        success: false,
+        message: errorMessage,
+      }
+  }
+}
+
+async function changePrestationInServiceStatus(prevState: ActionResponse<PrestationDTO> | null, payload:{id:string} & {newStatus: boolean}) : Promise<ActionResponse<PrestationDTO>>{
+  try {
+      const {id:prestationId, newStatus} = payload
+      if (!prestationId) throw new Error('Id is required')
+      prestationUpdateStatusSchema .parse({newStatus})
+      const updatedPrestation = await prestationsService.changePrestationInServiceStatus(prestationId, newStatus)
+      updateTag('prestations')
+    return {
+      success:true,
+      payload:updatedPrestation,
+      message: 'Estado de Servicio actualizado correctamente',
+    }
+
+  } catch (error) {
+      const errorMessage = errorHandler(error)
       return {
         success: false,
         message: errorMessage,
@@ -91,5 +113,6 @@ export {
   createPrestation, 
   fetchPrestations,
   updatePrestations, 
+  changePrestationInServiceStatus,
   deletePrestations 
 }

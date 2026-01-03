@@ -7,18 +7,19 @@ export type {
 
 export type {
   PrestationDTO,
-  PrestationCreateInternalDTO,
   PrestationCreateDTO,
-  PrestationUpdateDTO,
+  PrestationUpdateEntityDTO,
+  PrestationUpdateBasicDataDTO,
+  PrestationUpdateStatusDTO
 } from "@/schemas/prestations.schema";
 
 export type {
   ProviderDTO,
   ProviderDetailDTO,
-  ProviderCreateInternalDTO,
   ProviderCreateDTO,
-  ProviderUpdateDTO,
-  
+  ProviderUpdateEntityDTO,
+  ProviderUpdateBasicDataDTO,
+  ProviderUpdateStatusDTO
 } from "@/schemas/providers.schema";
 
 

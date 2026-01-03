@@ -1,7 +1,7 @@
 import prisma from "@/lib/prisma"
-import { ProviderCreateInternalDTO, ProviderUpdateDTO } from "@/types"
+import { ProviderCreateDTO, ProviderUpdateEntityDTO } from "@/types"
 
-const providerRelations = {
+const providerRelationsQuery = {
     specialties: true,
     prestations: {
         include: {
@@ -11,22 +11,35 @@ const providerRelations = {
 } 
 
 const providersRepository = {
-    createProvider: async (data: ProviderCreateInternalDTO) => {
-            return await prisma.provider.create({
-                data: {
-                    code: data.code,
-                    record: data.record,
-                    dni: data.dni,
-                    firstName: data.firstName,
-                    lastName: data.lastName,
-                    email: data.email,
-                    phone: data.phone,
-                    whatsAppNumber: data.whatsAppNumber,
-                    specialties: {
-                        connect: data.specialtyIds.map(id => ({ id }))
+    createProvider: async (data: ProviderCreateDTO) => {
+            return await prisma.$transaction(async (tx)=>{
+                const existing = await tx.provider.findFirst({
+                    where: {dni: data.dni}
+                })
+
+                if (existing && existing.deletedAt !== null) {
+                    return await tx.provider.update({
+                        where: { id: existing.id },
+                        data: { ...data, deletedAt: null },
+                        include: providerRelationsQuery
+                    });
+                }
+
+                const counter = await tx.entityCounter.upsert({
+                    where: { entity: 'provider' },
+                    update: { current: { increment: 1 } },
+                    create: { entity: 'provider', prefix: 'PROV', current: 1 }
+                });
+
+                const code = `${counter.prefix}-${counter.current.toString().padStart(4, '0')}`;
+
+                return await tx.provider.create({
+                    data: {
+                        ...data,
+                        code: code
                     },
-                },
-                include: providerRelations
+                    include: providerRelationsQuery
+                });
             })
     },
 
@@ -66,32 +79,22 @@ const providersRepository = {
     getProviderDetails: async (id: string) => {
        return await prisma.provider.findFirstOrThrow({
                 where: { id, deletedAt: null },
-                include: providerRelations
+                include: providerRelationsQuery
             })
     },
 
-    updateProvider: async (id: string, data: ProviderUpdateDTO) => {       
+    updateProvider: async (id: string, data: ProviderUpdateEntityDTO) => {       
         return await prisma.provider.update({
                 where: { id },
                 data:data,
-                include: providerRelations
-            })
-    },
-
-    updateProviderInServiceStatus: async (id: string, inService: boolean) => {       
-        return await prisma.provider.update({
-                where: { id },
-                data: {
-                    inService: inService
-                },
-                include: providerRelations
+                include: providerRelationsQuery
             })
     },
 
     deleteProvider: async (id: string) => {
        return await prisma.provider.update({
                 where: { id },
-                include: providerRelations,
+                include: providerRelationsQuery,
                 data: { deletedAt: new Date() }
             })
     },
@@ -99,14 +102,14 @@ const providersRepository = {
     hardDeleteProvider: async (id: string) => {
        return await prisma.provider.delete({
                 where: { id },
-                include: providerRelations
+                include: providerRelationsQuery
             })
     },
 
     async restoreProvider(id: string) {
         return prisma.provider.update({
         where: { id },
-        include: providerRelations,
+        include: providerRelationsQuery,
         data: { deletedAt: null },
         });
     },

@@ -1,12 +1,11 @@
 'use server'
 import { providersService } from "@/services"
 import { updateTag } from "next/cache"
-import { ActionResponse, ProviderDTO, ProviderDetailDTO, ProviderCreateDTO, ProviderUpdateDTO } from "@/types/"
-import { providerCreateSchema, providerUpdateSchema,  } from "@/schemas/providers.schema"
+import { ActionResponse, ProviderDTO, ProviderDetailDTO, ProviderCreateDTO, ProviderUpdateBasicDataDTO } from "@/types/"
+import { providerCreateSchema, providerUpdateBasicDataSchema, providerUpdateStatusSchema } from "@/schemas/providers.schema"
 import { errorHandler } from "@/lib/errorHandler"
 
 async function createProvider(prevState: ActionResponse<ProviderDetailDTO> | null, payload: ProviderCreateDTO) : Promise<ActionResponse<ProviderDetailDTO>>{
-
   try {
     providerCreateSchema.parse(payload)
     const newProvider= await providersService.createProvider(payload)
@@ -61,11 +60,34 @@ async function fetchProviderDetails(providerId: string) : Promise<ActionResponse
 }
 
 
-async function updateProvider(prevState: ActionResponse<ProviderDetailDTO> | null, payload:{id:string} & ProviderUpdateDTO) : Promise<ActionResponse<ProviderDetailDTO>>{
+async function updateProvider(prevState: ActionResponse<ProviderDetailDTO> | null, payload:{id:string} & ProviderUpdateBasicDataDTO) : Promise<ActionResponse<ProviderDetailDTO>>{
   try {
       const {id:providerId, ...data} = payload
-      providerUpdateSchema.parse(payload)
+      if (!providerId) throw new Error('Id is required')
+      providerUpdateBasicDataSchema.parse(data)
       const updatedProvider = await providersService.updateProvider(providerId, data)
+      updateTag('providers')
+    return {
+      success:true,
+      payload:updatedProvider,
+      message: 'Servicio actualizado correctamente',
+    }
+
+  } catch (error) {
+      const errorMessage = errorHandler(error)
+      return {
+        success: false,
+        message: errorMessage,
+      }
+  }
+}
+
+async function changeProviderInServiceStatus(prevState: ActionResponse<ProviderDTO> | null, payload:{id:string} & {newStatus:boolean}) : Promise<ActionResponse<ProviderDTO>>{
+  try {
+      const {id:providerId, newStatus} = payload
+      if (!providerId  ) throw new Error('Id is required')
+      providerUpdateStatusSchema.parse({newStatus})
+      const updatedProvider = await providersService.changeProviderInServiceStatus(providerId, newStatus) 
       updateTag('providers')
     return {
       success:true,
@@ -109,5 +131,6 @@ export {
   fetchProviders,
   fetchProviderDetails,
   updateProvider,
+  changeProviderInServiceStatus ,
   deleteProvider
 }

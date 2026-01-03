@@ -1,38 +1,49 @@
 import prisma from "@/lib/prisma";
-import { PrestationCreateInternalDTO, PrestationUpdateDTO } from "@/types";
+import { PrestationCreateDTO, PrestationUpdateEntityDTO } from "@/types";
 
-const prestationRelations = {
+const prestationRelationsQuery = {
   specialty: true,
   provider: true,
 };
 
 const prestationsRepository = {
-  createPrestation: async (data: PrestationCreateInternalDTO) => {
-    return await prisma.prestation.create({
-      data: {
-        inService: true,
-        code: data.code,
-        label: data.label,
-        description: data.description,
-        specialty: {
-          connect: {
-            id: data.specialtyId,
-          },
-        },
-        provider: {
-          connect: {
-            id: data.providerId,
-          },
-        },
-      },
-      include: prestationRelations,
+  createPrestation: async (data: PrestationCreateDTO) => {
+    return await prisma.$transaction(async (tx) => {
+      
+      const existing = await tx.prestation.findFirst({
+        where: { label: data.label },
+      });
+
+      if (existing && existing.deletedAt !== null) {
+        return await tx.prestation.update({
+          where: { id: existing.id },
+          data: { ...data, deletedAt: null },
+          include: prestationRelationsQuery,
+        });
+      }
+
+    const counter = await tx.entityCounter.upsert({
+      where: { entity: 'prestation' },
+      update: { current: { increment: 1 } },
+      create: { entity: 'prestation', prefix: 'PRES', current: 1 }
     });
+
+    const code = `${counter.prefix}-${counter.current.toString().padStart(4, '0')}`;
+
+    return await tx.prestation.create({
+      data: {
+        ...data,
+        code: code
+      },
+      include: prestationRelationsQuery,
+    }); 
+      })
   },
 
   getPrestations: async () => {
     return await prisma.prestation.findMany({
       where: { deletedAt: null }, 
-      include: prestationRelations,
+      include: prestationRelationsQuery,
       orderBy: { createdAt: "desc" },
     });
     
@@ -41,32 +52,23 @@ const prestationsRepository = {
   getPrestationById: async (id: string) => {
     return await prisma.prestation.findFirstOrThrow({
       where: { id, deletedAt: null },
-      include: prestationRelations,
+      include: prestationRelationsQuery,
     })
   },
 
-  updatePrestation: async (id: string, data: PrestationUpdateDTO) => {
+  updatePrestation: async (id: string, data: PrestationUpdateEntityDTO) => {
     return await prisma.prestation.update({
       where: { id },
       data: data,
-      include: prestationRelations,
+      include: prestationRelationsQuery,
     });
   },
 
-  updatePrestationInServiceStatus: async (id: string, inService: boolean) => {
-    return await prisma.prestation.update({
-      where: { id },
-      data: {
-        inService: inService,
-      },
-      include: prestationRelations,
-    });
-  },
 
     async deletePrestation(id: string) {
         return prisma.prestation.update({
         where: { id },
-        include: prestationRelations,
+        include: prestationRelationsQuery,
         data: { deletedAt: new Date() },
         });
   },
@@ -74,14 +76,14 @@ const prestationsRepository = {
   async hardDeletePrestation(id: string) {
     return await prisma.prestation.delete({
       where: { id },
-      include: prestationRelations,
+      include: prestationRelationsQuery,
     });
   },
 
   async restorePrestation(id: string) {
     return prisma.prestation.update({
       where: { id },
-      include: prestationRelations,
+      include: prestationRelationsQuery,
       data: { deletedAt: null },
     });
   },

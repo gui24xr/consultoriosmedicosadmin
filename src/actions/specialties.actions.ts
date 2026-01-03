@@ -1,13 +1,12 @@
 'use server'
 import { specialtiesService } from "@/services"
-import { updateTag, revalidateTag } from "next/cache"
+import { updateTag } from "next/cache"
 import { ActionResponse, SpecialtyDTO, SpecialtyCreateDTO,SpecialtyUpdateDTO} from "@/types"
 import { specialtyCreateDTOSchema, specialtyUpdateSchema } from "@/schemas/specialties.schema"
 import { errorHandler} from "@/lib/errorHandler"
 
 
 async function createSpecialty(prevState: ActionResponse<SpecialtyDTO> | null, payload: SpecialtyCreateDTO) : Promise<ActionResponse<SpecialtyDTO>>{
-
   try {
     specialtyCreateDTOSchema.parse(payload)
     const newSpecialty = await specialtiesService.createSpecialty(payload)

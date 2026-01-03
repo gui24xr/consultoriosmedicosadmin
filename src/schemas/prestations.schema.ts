@@ -16,29 +16,36 @@ export const prestationDTOSchema = z.object({
   }),
 });
 
-export const prestationCreateInternalDTOSchema = z.object({
-  code: z.string(),
+
+export const prestationDBSchema = z.object({
+  inService: z.boolean(),
   label: z.string(),
-  description: z.string().nullable(),
+  description: z.string(),
   specialtyId:z.string(),
   providerId:z.string(),
+})
+
+
+export const prestationCreateSchema = prestationDBSchema.omit({
+  inService: true}).extend({
+  description: z.string().optional(),
+})
+
+export const prestationUpdateEntitySchema = prestationDBSchema.partial()
+
+ export const prestationUpdateBasicDataSchema = prestationDBSchema
+  .omit({ inService: true })  
+  .partial();                
+
+export const prestationUpdateStatusSchema = prestationDBSchema.pick({
+  inService: true,
 });
-
-export const prestationCreateSchema = z.object({
-  label: z.string(),
-  description: z.string().nullable(),
-  specialtyId:z.string(),
-  providerId:z.string(),
-});
-
-export const prestationUpdateSchema = prestationCreateSchema.partial()
-
-
 
 
 export type PrestationDTO = z.infer<typeof prestationDTOSchema>;3
-export type PrestationCreateInternalDTO = z.infer<typeof prestationCreateInternalDTOSchema>;
 export type PrestationCreateDTO = z.infer<typeof prestationCreateSchema>;
-export type PrestationUpdateDTO = z.infer<typeof prestationUpdateSchema>;
+export type PrestationUpdateEntityDTO = z.infer<typeof prestationUpdateEntitySchema>;
+export type PrestationUpdateBasicDataDTO = z.infer<typeof prestationUpdateBasicDataSchema>;
+export type PrestationUpdateStatusDTO = z.infer<typeof prestationUpdateStatusSchema>;
 
 
