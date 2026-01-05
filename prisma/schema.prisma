@@ -30,8 +30,8 @@ model Customer {
   updatedAt DateTime @updatedAt
   deletedAt DateTime?
   addressData AddressData?
-  user User?
-  bookings Booking[]
+  userData User?
+  bookingsData Booking[]
   consultations Consultation[]
   caseHistory CaseHistory? 
 }
@@ -64,37 +64,56 @@ model User{
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   customerId String? @unique
-  customer Customer? @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  providerId String? @unique
-  provider Provider? @relation(fields: [providerId], references:[id], onDelete: Cascade)
+  customerData Customer? @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  staffMemberId String? @unique
+  staffMember StaffMember? @relation(fields: [staffMemberId], references:[id], onDelete: Cascade)
 }
 
 
-model Provider {
+model StaffMember {
   id String @id @default(uuid())
   code String @unique // Código legible como PROV-001, PROV-002, etc.
-  inService Boolean @default(true)
   dni String @unique
   firstName String        
-  lastName String      
-  email String?           
-  phone String?           
+  lastName String
+  email String?  @unique         
+  phone String?  @unique      
   whatsAppNumber String? 
   record String? @unique
-  specialties Specialty[] 
   user User? 
+  providerData Provider? 
+  adminEmployeeData AdminEmployee?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   deletedAt DateTime?
+}
+
+model Provider {
+  id String @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  displayName String
+  memberData  StaffMember  @relation(fields: [id], references: [id], onDelete: Cascade)
+  specialties Specialty[] 
   prestations Prestation[]
   consultations Consultation[]
 }
+
+model AdminEmployee {
+  id String @id @default(uuid())
+  task String @unique 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  memberData  StaffMember  @relation(fields: [id], references: [id], onDelete: Cascade)
+}
+
 
 
 model Specialty{
   id String @id @default(uuid())
   code String @unique // Código legible como SPEC-001, SPEC-002, etc.
-  name String @unique
+  identifier String @unique
+  displayName String
   providers Provider[]
   prestations Prestation[]
   createdAt DateTime @default(now())
@@ -142,7 +161,8 @@ model Prestation {
   id String @id @default(uuid())
   inService Boolean @default(true)
   code String @unique
-  label String @unique
+  identifier String @unique
+  displayName String? //Aca lo hago opcional, si no se ingresa display name muestro specialty.displayName + provider.displayName
   description String?
   providerId String
   specialtyId String
@@ -215,7 +235,7 @@ model Booking {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   deletedAt DateTime?
-  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  customerData Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
   appointment Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)  
 }
 
@@ -273,7 +293,7 @@ model PatientMedicalData {
   updatedAt DateTime @updatedAt
   deletedAt DateTime?
   patientId String @unique
-  patient Patient @relation(fields: [patientId], references: [id])
+  patientData Patient @relation(fields: [patientId], references: [id])
 }
 
 

@@ -2,6 +2,7 @@ import {
   SpecialtyCreateDTO,
   SpecialtyDTO,
   SpecialtyUpdateDTO,
+  SpecialtyOptionDTO
 } from "@/types";
 import { SpecialtyType } from "@/repositories/specialties.repository";
 import { specialtiesRepository } from "@/repositories";
@@ -10,33 +11,37 @@ import { unstable_cache } from "next/cache";
 function getSpecialtyDTO(specialty: SpecialtyType): SpecialtyDTO {
   return {
     id: specialty.id,
-    name: specialty.name,
+    identifier: specialty.identifier,
+    displayName: specialty.displayName,
     code: specialty.code,
     updatedAt: specialty.updatedAt,
-    prestations:
-      specialty.prestations.map((prestation) => ({
-        id: prestation.id,
-        code: prestation.code,
-        label: prestation.label,
-      })) || [],
-    providers:
-      specialty.providers.map((provider) => ({
-        id: provider.id,
-        completeName: provider.firstName + " " + provider.lastName,
-      })) || [],
+    prestationsData: specialty.prestations.map((prestation) => ({
+      id: prestation.id,
+      displayName: prestation.displayName || (specialty.displayName + " - " + specialty.displayName),
+      code: prestation.code,
+    })),
+    providersData: specialty.providers.map((provider) => ({
+      id: provider.id,
+      displayName: provider.displayName,
+      completeName: provider.memberData?.lastName + " " + provider.memberData?.firstName,
+    })),
+   
+   
   };
 }
 class SpecialtiesService {
-  private normalizeSpecialtyName(name: string): string {
-    return name.toLowerCase().trim();
+  private normalizeSpecialtyIdentifier(identifier: string): string {
+    return identifier.toUpperCase().trim();
   }
 
   async createSpecialty(data: SpecialtyCreateDTO): Promise<SpecialtyDTO> {
     const newSpecialtyData = {
-      name: this.normalizeSpecialtyName(data.name),
+      identifier: this.normalizeSpecialtyIdentifier(data.identifier),
+      displayName: data.displayName,
     };
+   
     const specialty = await specialtiesRepository.createSpecialty(
-      newSpecialtyData
+      newSpecialtyData,
     );
     return getSpecialtyDTO(specialty);
   }
@@ -73,8 +78,8 @@ class SpecialtiesService {
     data: SpecialtyUpdateDTO
   ): Promise<SpecialtyDTO> {
     const updateSpecialtyData = { ...data };
-    if (data.name)
-      updateSpecialtyData.name = this.normalizeSpecialtyName(data.name);
+    if (data.identifier)
+      updateSpecialtyData.identifier = this.normalizeSpecialtyIdentifier(data.identifier);
     const updatedSpecialty = await specialtiesRepository.updateSpecialty(
       id,
       updateSpecialtyData
@@ -98,6 +103,14 @@ class SpecialtiesService {
     const restoredSpecialty = await specialtiesRepository.restoreSpecialty(id);
     return getSpecialtyDTO(restoredSpecialty);
   }
+
+  async getSpecialtiesOptions(): Promise<SpecialtyOptionDTO[]> {
+    const specialties = await this.getSpecialties(); 
+    return specialties.map(specialty => ({ 
+        id: specialty.id, 
+        displayName: specialty.displayName 
+    }));
+}
 }
 
 const specialtiesService = new SpecialtiesService();

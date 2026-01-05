@@ -1,21 +1,29 @@
-import { createSpecialty, fetchSpecialties, updateSpecialty, deleteSpecialty } from "./specialties.actions";
 
 import { 
-  createProvider,
-  fetchProviders,
-  fetchProviderDetails,
-  updateProvider,
-  changeProviderInServiceStatus,
-  deleteProvider } from "./providers.actions";
+  createSpecialty, 
+  fetchSpecialties, 
+  updateSpecialty, 
+  deleteSpecialty 
+} from "@/actions/specialties.actions"
 
-  import {
-     createPrestation, 
+
+import {
+    createPrestation, 
     fetchPrestations,
     updatePrestations, 
     changePrestationInServiceStatus,
     deletePrestations 
-  } from "./prestations.actions";
+  } from "@/actions/prestations.actions"
   
+  import {
+  createProvider,
+  createAdminEmployee,
+  fetchProvidersOptions,
+  updateProvider,
+  updateAdminEmployee,
+  //changeProviderInServiceStatus,
+  deleteStaffMember
+  } from "@/actions/staffMembersService.actions"
 
   export {
   createSpecialty,
@@ -24,13 +32,14 @@ import {
   deleteSpecialty,
 
   createProvider,
-  fetchProviders,
-  fetchProviderDetails,
+  createAdminEmployee,
+  fetchProvidersOptions,
   updateProvider,
-  changeProviderInServiceStatus,
-  deleteProvider,
+  updateAdminEmployee,
+  //changeProviderInServiceStatus,
+  deleteStaffMember,
 
- createPrestation, 
+  createPrestation, 
   fetchPrestations,
   updatePrestations, 
   changePrestationInServiceStatus,

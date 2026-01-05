@@ -1,27 +1,30 @@
 export type {
     SpecialtyDTO,
     SpecialtyUpdateDTO,
-    SpecialtyCreateDTO
+    SpecialtyCreateDTO,
+    SpecialtyOptionDTO
   
 } from "@/schemas/specialties.schema";
 
 export type {
   PrestationDTO,
   PrestationCreateDTO,
-  PrestationUpdateEntityDTO,
-  PrestationUpdateBasicDataDTO,
+  PrestationUpdateDTO,
   PrestationUpdateStatusDTO
 } from "@/schemas/prestations.schema";
 
-export type {
-  ProviderDTO,
-  ProviderDetailDTO,
-  ProviderCreateDTO,
-  ProviderUpdateEntityDTO,
-  ProviderUpdateBasicDataDTO,
-  ProviderUpdateStatusDTO
-} from "@/schemas/providers.schema";
 
+
+
+export type {
+  StaffMemberCreateProviderDTO,
+  StaffMemberUpdateProviderDTO,
+  StaffMemberCreateAdminEmployeeDTO,
+  StaffMemberUpdateAdminEmployeeDTO,
+  StaffMemberDTO,
+  ProviderDTO,
+  ProviderOptionDTO
+} from "@/schemas/staffMembers.schema";
 
 export type {
   ActionResponse

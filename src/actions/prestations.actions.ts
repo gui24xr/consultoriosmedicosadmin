@@ -1,12 +1,11 @@
 'use server'
 import { prestationsService } from "@/services"
 import {  updateTag } from "next/cache"
-import { ActionResponse, PrestationDTO, PrestationCreateDTO, PrestationUpdateBasicDataDTO, PrestationUpdateStatusDTO } from "@/types"
-import { prestationCreateSchema, prestationUpdateBasicDataSchema, prestationUpdateStatusSchema } from "@/schemas/prestations.schema"
+import { ActionResponse, PrestationDTO, PrestationCreateDTO, PrestationUpdateDTO, PrestationUpdateStatusDTO } from "@/types"
+import { prestationCreateSchema, prestationUpdateSchema, prestationUpdateStatusSchema } from "@/schemas/prestations.schema"
 import { errorHandler } from "@/lib/errorHandler"
 
 async function createPrestation(prevState: ActionResponse<PrestationDTO> | null, payload: PrestationCreateDTO) : Promise<ActionResponse<PrestationDTO>>{
-
   try {
     prestationCreateSchema.parse(payload)
     const newPrestation = await prestationsService.createPrestation(payload)
@@ -16,7 +15,6 @@ async function createPrestation(prevState: ActionResponse<PrestationDTO> | null,
       payload:newPrestation,
       message:'Servicio  creado correctamente',
     }
-
   } catch (error) {
       const errorMessage = errorHandler(error)
       return {
@@ -44,10 +42,10 @@ async function fetchPrestations(): Promise<ActionResponse<PrestationDTO[]>>  {
   }
 }
 
-async function updatePrestations(prevState: ActionResponse<PrestationDTO> | null, payload:{id:string} & PrestationUpdateBasicDataDTO) : Promise<ActionResponse<PrestationDTO>>{
+async function updatePrestations(prevState: ActionResponse<PrestationDTO> | null, payload:{id:string} & PrestationUpdateDTO) : Promise<ActionResponse<PrestationDTO>>{
   try {
       const {id:prestationId, ...data} = payload
-      prestationUpdateBasicDataSchema.parse(payload)
+      prestationUpdateSchema.parse(payload)
       const updatedPrestation = await prestationsService.updatePrestation(prestationId, data)
       updateTag('prestations')
     return {
@@ -89,7 +87,6 @@ async function changePrestationInServiceStatus(prevState: ActionResponse<Prestat
 
 async function deletePrestations(prevState: ActionResponse<PrestationDTO> | null, consultationServiceId: string): Promise<ActionResponse<PrestationDTO>>{
   try {
-   //aca validamos con zod que haya venido un medicId
    if(!consultationServiceId) throw new Error('Id is required')
    const deletedConsultationService = await prestationsService.deletePrestation(consultationServiceId)
    updateTag('prestations')

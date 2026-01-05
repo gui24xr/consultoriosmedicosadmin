@@ -1,7 +1,8 @@
 import {
   PrestationDTO,
   PrestationCreateDTO,
-  PrestationUpdateBasicDataDTO,
+  PrestationUpdateDTO,
+  PrestationUpdateStatusDTO
 } from "@/types";
 import { PrestationType } from "@/repositories/prestations.repository";
 import { prestationsRepository } from "@/repositories";
@@ -10,18 +11,21 @@ import { unstable_cache } from "next/cache";
 function getPrestationDTO(prestation: PrestationType): PrestationDTO {
   return {
     id: prestation.id,
-    inService: prestation.inService,
-    label: prestation.label,
     code: prestation.code,
+    identifier: prestation.identifier,
+    displayName: prestation.displayName || (prestation.specialty.displayName + " - " + prestation.provider.displayName), 
     description: prestation.description || null,
+    inService: prestation.inService,
     specialty: {
       id: prestation.specialty.id,
-      name: prestation.specialty.name,
+      code: prestation.specialty.code,
+      identifier: prestation.specialty.identifier,
+      displayName: prestation.specialty.displayName
     },
-    provider: {
+    providerData: {
       id: prestation.provider.id,
-      completeName:
-        prestation.provider.firstName + " " + prestation.provider.lastName,
+      displayName: prestation.provider.displayName,
+      completeName: prestation.provider.memberData?.lastName + " " + prestation.provider.memberData?.firstName,
     },
   };
 }
@@ -58,23 +62,13 @@ class PrestationsService {
     return await cachedPrestation();
   }
 
-  async updatePrestation(
-    id: string,
-    data: PrestationUpdateBasicDataDTO
-  ): Promise<PrestationDTO> {
+  async updatePrestation(id: string,data: PrestationUpdateDTO): Promise<PrestationDTO> {
     const prestation = await prestationsRepository.updatePrestation(id, data);
     return getPrestationDTO(prestation);
   }
 
-  async changePrestationInServiceStatus(
-    id: string,
-    inService: boolean
-  ): Promise<PrestationDTO> {
-    const newData = { inService };
-    const prestation = await prestationsRepository.updatePrestation(
-      id,
-      newData
-    );
+  async changePrestationInServiceStatus(id: string,inService: boolean): Promise<PrestationDTO> {
+    const prestation = await prestationsRepository.changePrestationInServiceStatus(id, inService);
     return getPrestationDTO(prestation);
   }
 

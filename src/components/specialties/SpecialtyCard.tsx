@@ -7,7 +7,7 @@ export default function SpecialtyCard({specialty, expanded = false, showActionsB
             title='Medicos que atienden esta especialidad:'
             emptyMessage="Aun no existen medicos para esta especialidad."
             layout="column"
-            items={specialty.providers.map(provider => provider.completeName)}
+            items={specialty.providersData.map(provider => provider.completeName)}
             />
     }
 
@@ -15,8 +15,8 @@ export default function SpecialtyCard({specialty, expanded = false, showActionsB
         return <ListCard 
             title='Servicios de consulta para esta especialidad:'
             emptyMessage="Aun no existen servicios."
-            items={specialty.prestations.map
-            (prestation => prestation.label)}
+            items={specialty.prestationsData.map
+            (prestation => prestation.displayName)}
             itemStyle="badge"
             layout="column"
             />
@@ -29,8 +29,8 @@ export default function SpecialtyCard({specialty, expanded = false, showActionsB
         sectionsArray.push(<SpecialtyActionBar specialtyId={specialty.id} />)
     }
     return <EntityCard 
-        title={specialty.name}
-        subtitle={specialty.code}
+        title={specialty.displayName}
+        subtitle={specialty.code + " - " + specialty.identifier}
         sections={sectionsArray}
         expanded={expanded}
         

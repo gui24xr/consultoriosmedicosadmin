@@ -7,7 +7,8 @@ import { antdFormConfig } from "@/configs/antdformconfigs";
 import { SpecialtyCard } from "@/components/specialties";
 
 type FieldType = {
-  name: string;
+  identifier: string;
+  displayName: string;
 };
 
 const onFinishFailed: FormProps<FieldType>["onFinishFailed"] = (errorInfo) => {
@@ -36,13 +37,27 @@ export default function SpecialtyCreateForm() {
           onFinishFailed={onFinishFailed}
         >
           <Form.Item<FieldType>
-            label="Nombre de especialidad"
-            name="name"
+            label="Identificador de especialidad."
+            name="identifier"
             rules={[
               {
                 required: true,
                 message:
-                  "Ingrese el nombre de la especialidad. EJ: Medicina general",
+                  "Ingrese un identificador de especialidad. EJ: MED-GEN, MED-CLI, etc.",
+              },
+            ]}
+          >
+            <Input />
+          </Form.Item>
+
+          <Form.Item<FieldType>
+            label="Nombre de visualizacion de especialidad."
+            name="displayName"
+            rules={[
+              {
+                required: true,
+                message:
+                  "Ingrese el nombre con el cuel se visualizara la especialidad. EJ: Medicina general",
               },
             ]}
           >

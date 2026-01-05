@@ -15,12 +15,12 @@ const [searchQuery, setSearchQuery] = useState('')
   
   return specialties.filter(
     specialty =>
-      specialty.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      specialty.providers.some(medic =>
-        medic.completeName.toLowerCase().includes(searchQuery.toLowerCase())
+      specialty.displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      specialty.providersData.some(provider =>
+        provider.completeName.toLowerCase().includes(searchQuery.toLowerCase())
       ) ||
-      specialty.prestations.some(prestation =>
-        prestation.label.toLowerCase().includes(searchQuery.toLowerCase())
+      specialty.prestationsData.some(prestation =>
+        prestation.displayName.toLowerCase().includes(searchQuery.toLowerCase())
       )
   );
 }, [specialties, searchQuery]);

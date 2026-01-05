@@ -1,15 +1,11 @@
 
+import { SpecialtyOptionDTO } from '@/types';
 import { useState, useEffect } from 'react'
 import { fetchSpecialties } from '@/actions';
 
-type SpecialtyOption = {
-  label: string;
-  value: string;
-};
-
 export default function useFormsSpecialtyOptions() {
 
-      const [options, setOptions] = useState<SpecialtyOption[]>([]);
+      const [options, setOptions] = useState<SpecialtyOptionDTO[]>([]);
       const [loading, setLoading] = useState(true);
       const [error, setError] = useState<string | null>(null); 
 
@@ -27,8 +23,8 @@ export default function useFormsSpecialtyOptions() {
               setError('No existen especialidades meddicas en el sistema.')
             } else {
               const specialtiesOptions = specialties.map((specialty) => ({
-                                label: specialty.name,
-                                value: specialty.id,
+                                id: specialty.id,
+                                displayName: specialty.displayName
                             }))     
               setOptions(specialtiesOptions)
             }
